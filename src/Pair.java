@@ -1,15 +1,15 @@
 /**
- * Une paire d'éléments.
+ * Une paire d'elements.
  * 
  * <p>
- * Code récupéré <a href="http://stackoverflow.com/a/677248">ici</a>.
+ * Code recupere <a href="http://stackoverflow.com/a/677248">ici</a>.
  * </p>
  * 
- * @param <A>
- * @param <B>
+ * @param <A> Type du premier element de la paire
+ * @param <B> Type du second element de la paire
  */
 public class Pair<A extends Comparable<A>, B extends Comparable<B>>
-implements Comparable<Pair<A, B>> {
+implements Comparable<Pair<A, B>>, Cloneable {
 
     private A first;
     private B second;
@@ -67,5 +67,20 @@ implements Comparable<Pair<A, B>> {
 	int cmp = this.first.compareTo(other.first);
 	
 	return (cmp == 0) ? this.second.compareTo(other.second) : cmp;
+    }
+    
+    public Object clone() {
+	Object o = null;
+	try {
+		// On récupère l'instance à renvoyer par l'appel de la 
+		// méthode super.clone()
+		o = super.clone();
+	} catch(CloneNotSupportedException cnse) {
+		// Ne devrait jamais arriver car nous implémentons 
+		// l'interface Cloneable
+		cnse.printStackTrace(System.err);
+	}
+	// on renvoie le clone
+	return o;
     }
 }

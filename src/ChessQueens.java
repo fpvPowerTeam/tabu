@@ -19,16 +19,16 @@ public class ChessQueens {
      * Container du probleme.
      * 
      * <p>
-     * Contient l'ensemble des variables et contraintes du problème.
+     * Contient l'ensemble des variables et contraintes du probleme.
      * </p>
      */
     private Store store;
 
     /**
-     * Les variables du problème.
+     * Les variables du probleme.
      * 
      * <p>
-     * Q[i] correspond à la colonne de la reine de la ligne i.
+     * Q[i] correspond a la colonne de la reine de la ligne i.
      * </p>
      */
     private IntVar[] Q;
@@ -49,13 +49,13 @@ public class ChessQueens {
      * 
      * <p>
      * Lorsque la taille maximale de la liste tabu est atteinte, le mouvement
-     * tabou le plus vieux est retiré pour laisser place au nouveau.
+     * tabou le plus vieux est retire pour laisser place au nouveau.
      * </p>
      */
     private int tabuListSize = 0;
 
     /**
-     * Construit un nouveau problème des n reines.
+     * Construit un nouveau probleme des n reines.
      * 
      * @param n
      *            Le nombre de reines
@@ -86,8 +86,12 @@ public class ChessQueens {
 	this.store.impose(new Alldifferent(z));
     }
 
-    // Get the domains of the main variables
-    public IntDomain[] getDomains() {
+    /**
+     * Retourne le domaine des variables.
+     * 
+     * @return Un tableau contenant le domaine de chaque variable
+     */
+    private IntDomain[] getDomains() {
 	IntDomain[] tab = new IntDomain[this.Q.length];
 	for (int i = 0; i < this.Q.length; ++i) {
 	    tab[i] = this.Q[i].domain;
@@ -95,8 +99,16 @@ public class ChessQueens {
 	return tab;
     }
 
-    // Generate randomly a solution within the domains
-    public int[] generateSolution(IntDomain[] domains) {
+    /**
+     * Genere aleatoirement une solution.
+     * 
+     * @param domains
+     *            Tableau des domaines des varaibles
+     * 
+     * @return Un tableau contenant la valeur des variables de la solution
+     *         generee
+     */
+    private int[] generateSolution(IntDomain[] domains) {
 	Random rand = new Random();
 	int[] solution = new int[domains.length];
 
@@ -113,7 +125,7 @@ public class ChessQueens {
     }
 
     // Cost or fitness of an alldifferent constraint
-    public int costAllDifferent(int[] sol) {
+    private int costAllDifferent(int[] sol) {
 	int n = 0;
 	for (int i = 0; i < sol.length; ++i) {
 	    for (int j = i + 1; j < sol.length; ++j) {
@@ -125,7 +137,7 @@ public class ChessQueens {
     }
 
     // Fitness of a solution for the n-queens problem
-    public int fitness(int[] sol) {
+    private int fitness(int[] sol) {
 	int n = 0;
 
 	// allDifferent on Q
@@ -147,8 +159,13 @@ public class ChessQueens {
 	return n;
     }
 
-    // Display a solution
-    public static void printSolution(int[] sol) {
+    /**
+     * Affiche une solution.
+     * 
+     * @param sol
+     *            Un tableau contenant les valeur des variables d'une solution
+     */
+    private static void printSolution(int[] sol) {
 	System.out.print("{");
 	for (int i = 0; i < sol.length; ++i) {
 	    if (i != 0)
@@ -158,6 +175,19 @@ public class ChessQueens {
 	System.out.print("}");
     }
 
+    /**
+     * Teste si une position (ligne,colonne) est taboue.
+     * 
+     * @param row
+     *            Un index de ligne (index de variable)
+     * @param column
+     *            Un index de colonne (valeur de la variable)
+     * 
+     * @return <ul>
+     *         <li>true si la position est taboue</li>
+     *         <li>false sinon</li>
+     *         </ul>
+     */
     private Boolean isTabu(Integer row, Integer column) {
 	return (this.tabuList.contains(new Pair<Integer, Integer>(row, column)) == false);
     }
@@ -166,12 +196,12 @@ public class ChessQueens {
      * Parcourt le voisinnage d'une solution.
      * 
      * @param sol
-     * 		La solution courante
+     *            La solution courante
      * 
-     * @return Le mouvement à effectuer pour atteindre le meilleur voisin
-     * de la solution courante
+     * @return Une paire contenant le mouvement pour atteindre le meilleur
+     *         voisin de la solution (ligne,colonne) et son cout
      */
-    private Pair<Integer, Integer> findBestNeighbour(int[] sol) {
+    private Pair<Pair<Integer, Integer>, Integer> findBestNeighbour(int[] sol) {
 	int[] bestNeighbour = new int[sol.length];
 	Pair<Integer, Integer> bestMove = null;
 	int bestCost = Integer.MAX_VALUE;
@@ -191,8 +221,8 @@ public class ChessQueens {
 	    for (int column = 0; column < sol.length; column++) {
 		currentMove = new Pair<Integer, Integer>(row, column);
 
-		// La position de la variable modifiée ne doit
-		// pas appartenir à la liste tabu
+		// La position de la variable modifiee ne doit
+		// pas appartenir a la liste tabu
 		if (this.isTabu(row, column)) {
 		    currentNeighbour[row] = column;
 		    currentCost = fitness(currentNeighbour);
@@ -201,8 +231,8 @@ public class ChessQueens {
 			for (int i = 0; i < bestNeighbour.length; i++) {
 			    bestNeighbour[i] = currentNeighbour[i];
 			}
-
-			bestMove = currentMove;
+			
+			bestMove = (Pair<Integer, Integer>) currentMove.clone();
 			bestCost = currentCost;
 		    }
 		}
@@ -211,16 +241,17 @@ public class ChessQueens {
 	    currentNeighbour[row] = sol[row];
 	}
 
-	return bestMove;
+	return new Pair<Pair<Integer, Integer>, Integer>((bestMove), bestCost);
     }
 
     /**
      * Effectue une recherche taboue.
      * 
-     * @param nRuns Nombre maximal de runs à effectuer
+     * @param nRuns
+     *            Nombre maximal de runs a effectuer
      * 
      * @return <ul>
-     *         <li>true si une solution est trouvée,</li>
+     *         <li>true si une solution est trouvee,</li>
      *         <li>false sinon</li>
      *         </ul>
      */
@@ -237,42 +268,34 @@ public class ChessQueens {
 	    System.out.println("Run " + (run + 1));
 	    tabuList.clear();
 
-	    // Génération de la solution initiale du run
+	    // Generation de la solution initiale du run
 	    int[] currentSol = generateSolution(domains);
 	    int currentCost = fitness(currentSol);
 
-	    // System.out.print("Solution initiale aléatoire : ");
+	    // System.out.print("Solution initiale aleatoire : ");
 	    // printSolution(currentSol);
 	    System.out.println("Cout initial : " + currentCost);
 
 	    Boolean goOn = true;
-	    
+
 	    // On continue la recherche tant que l'on trouve
 	    // un voisin au moins aussi bon que la solution courante
 	    // et que celle-ci n'est pas admissible
 	    while (goOn && currentCost > 0) {
 		goOn = false;
-		
-		Pair<Integer, Integer> moveToNeighbour = findBestNeighbour(currentSol);
 
-		if (moveToNeighbour != null) {
-		    int[] bestNeighbour = new int[currentSol.length];
+		Pair<Pair<Integer, Integer>, Integer> p =
+			findBestNeighbour(currentSol);
 
-		    for (int i = 0; i < bestNeighbour.length; i++) {
-			if (i == moveToNeighbour.getFirst()) {
-			    bestNeighbour[i] = moveToNeighbour.getSecond();
-			} else {
-			    bestNeighbour[i] = currentSol[i];
-			}
-		    }
+		if (p != null) {
+		   int bestNeighbourCost = p.getSecond();
 
-		    int bestNeighbourCost = fitness(bestNeighbour);
-
+		    // Le voisin est meilleur que la solution courante
 		    if (bestNeighbourCost <= currentCost) {
-			for (int i = 0; i < currentSol.length; i++) {
-			    currentSol[i] = bestNeighbour[i];
-			}
-
+			int row = p.getFirst().getFirst();
+			int column = p.getFirst().getSecond();
+			
+			currentSol[row] = column;
 			currentCost = bestNeighbourCost;
 
 			if ((this.tabuList.size() == tabuListSize)
@@ -280,7 +303,7 @@ public class ChessQueens {
 			    tabuList.remove(0);
 			}
 
-			tabuList.add(moveToNeighbour);
+			tabuList.add(p.getFirst());
 
 			// Affichage de la liste tabu (DBG)
 			// System.out.print("Liste tabu : ");
@@ -298,7 +321,7 @@ public class ChessQueens {
 			    bestSoFarCost = bestNeighbourCost;
 
 			    for (int i = 0; i < bestSoFarSol.length; i++) {
-				bestSoFarSol[i] = bestNeighbour[i];
+				bestSoFarSol[i] = currentSol[i];
 			    }
 
 			    System.out.println("Nouveau meilleur cout : "
@@ -309,29 +332,30 @@ public class ChessQueens {
 	    }
 
 	    if (currentCost == 0) {
-		System.out.print("Solution admissible trouvée : ");
+		System.out.print("Solution admissible trouvee : ");
 		printSolution(currentSol);
 		System.out.println("\n");
 
 		stop = true;
 	    } else {
-		System.out.println("Pas de solution admissible trouvée.");
+		System.out.println("Pas de solution admissible trouvee.");
 		System.out.println();
 	    }
 	}
 
 	long endTime = System.currentTimeMillis();
 
-	System.out.println("Temps d'execution : " + (endTime - startTime) + "ms");
+	System.out.println("Temps d'execution : " + (endTime - startTime)
+	        + "ms");
 
 	return (bestSoFarCost == 0);
     }
 
     /**
-     * Effectue une recherche complete.
+     * Effectue une recherche totale.
      * 
      * @return <ul>
-     *         <li>true si une solution est trouvée,</li>
+     *         <li>true si une solution est trouvee,</li>
      *         <li>false sinon</li>
      *         </ul>
      */
@@ -359,6 +383,18 @@ public class ChessQueens {
 	return result;
     }
 
+    /**
+     * Parse les arguments de la ligne de commande.
+     * 
+     * @param args
+     *            Un tableau des arguments de la ligne de commande
+     *            sous forme de chaines de caracteres
+     * 
+     * @return La liste des arguments passes en ligne de commande
+     * 
+     * @throws Exception
+     *             Si un argument est manquant ou invalide
+     */
     private static ArrayList<Integer> parseCmdLine(String[] args)
 	    throws Exception {
 
@@ -381,7 +417,7 @@ public class ChessQueens {
 
 		catch (NumberFormatException e) {
 		    System.out.println("Erreur :"
-			    + " les arguments doivent être des entiers.");
+			    + " les arguments doivent etre des entiers.");
 		    System.out.println("Usage : java -jar ChessQueens"
 			    + " [<nQueens> <tabuListSize> <nRuns>]");
 
@@ -402,6 +438,11 @@ public class ChessQueens {
 	return argList;
     }
 
+    /**
+     * Demande a l'utilisateur de saisir les parametres du programme.
+     * 
+     * @return La liste des parametres saisis par l'utilisateur
+     */
     private static ArrayList<Integer> askArguments() {
 	ArrayList<Integer> argList = new ArrayList<Integer>();
 	Integer nQueens = 0, tabuListSize = 0, nRuns = 0;
@@ -409,6 +450,8 @@ public class ChessQueens {
 
 	Scanner scanner = new Scanner(System.in);
 
+	// Nombre de reines
+	// Superieur a 3 (pas de solution sinon)
 	while (nQueens < 4) {
 	    System.out.print("Nombre de reines (4 minimum) : ");
 	    saisie = scanner.nextLine();
@@ -430,6 +473,8 @@ public class ChessQueens {
 	    }
 	}
 
+	// Taille de la liste tabu
+	// Positive non nulle
 	while (tabuListSize < 1) {
 	    System.out.print("Taille de la liste tabu : ");
 	    saisie = scanner.nextLine();
@@ -441,7 +486,7 @@ public class ChessQueens {
 	    catch (NumberFormatException e) {
 		;
 	    }
-
+	    
 	    if (tabuListSize > 0) {
 		argList.add(tabuListSize);
 	    }
@@ -451,6 +496,8 @@ public class ChessQueens {
 	    }
 	}
 
+	// Nombre de runs
+	// Positif non nul
 	while (nRuns < 1) {
 	    System.out.print("Nombre de runs : ");
 	    saisie = scanner.nextLine();
