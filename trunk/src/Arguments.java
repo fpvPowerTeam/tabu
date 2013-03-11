@@ -1,7 +1,7 @@
 import org.kohsuke.args4j.Option;
 
 /**
- * Parseur de la ligne de commande.
+ * Arguments de la ligne de commande.
  */
 public class Arguments {
     
