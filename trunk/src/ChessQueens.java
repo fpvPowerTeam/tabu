@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -202,9 +203,9 @@ public class ChessQueens {
      *         voisin de la solution (ligne,colonne) et son cout
      */
     private Pair<Pair<Integer, Integer>, Integer> findBestNeighbour(int[] sol) {
-	int[] bestNeighbour = new int[sol.length];
-	Pair<Integer, Integer> bestMove = null;
 	int bestCost = Integer.MAX_VALUE;
+	List<Pair<Integer, Integer>> bestMoves =
+		new ArrayList<Pair<Integer, Integer>>();
 
 	int[] currentNeighbour = new int[sol.length];
 	Pair<Integer, Integer> currentMove = null;
@@ -228,20 +229,26 @@ public class ChessQueens {
 		    currentCost = fitness(currentNeighbour);
 
 		    if (currentCost < bestCost) {
-			for (int i = 0; i < bestNeighbour.length; i++) {
-			    bestNeighbour[i] = currentNeighbour[i];
-			}
+			bestMoves.clear();
+			bestMoves.add(new Pair<Integer, Integer>(currentMove));
 			
-			bestMove = (Pair<Integer, Integer>) currentMove.clone();
 			bestCost = currentCost;
+		    }
+		    
+		    else if(currentCost == bestCost) {
+			bestMoves.add(new Pair<Integer, Integer>(currentMove));
 		    }
 		}
 	    }
 
 	    currentNeighbour[row] = sol[row];
 	}
+	    
+	Random rand = new Random();
+	Integer randIndex = rand.nextInt(bestMoves.size());
 
-	return new Pair<Pair<Integer, Integer>, Integer>((bestMove), bestCost);
+	return new Pair<Pair<Integer, Integer>, Integer>(
+		bestMoves.get(randIndex), bestCost);
     }
 
     /**
