@@ -15,6 +15,15 @@ import JaCoP.search.SelectChoicePoint;
 import JaCoP.search.SimpleSelect;
 import JaCoP.search.SmallestDomain;
 
+/**
+ * Recherche tabu pour le probleme des n reines.
+ * 
+ * <p>
+ * La solution initiale est generee aleatoirement.
+ * Le mouvement de voisinage est le deplacement d'une reine dans sa ligne.
+ * </p>
+ *
+ */
 public class ChessQueens {
     /**
      * Container du probleme.

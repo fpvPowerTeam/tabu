@@ -14,6 +14,17 @@ import JaCoP.search.SelectChoicePoint;
 import JaCoP.search.SimpleSelect;
 import JaCoP.search.SmallestDomain;
 
+/**
+ * Seconde version de recherche tabu pour le probleme des n reines.
+ * 
+ * <p>
+ * La solution initiale est formée en placant les reines sur une diagonale.
+ * Le mouvement de voisinage est le swap entre deux lignes.
+ * La taille du voisinage est ainsi reduite de n^2 a n*(n-1)/2 mais le nombre
+ * de mouvements pour atteindre une solution admissible est accru.
+ * Pas de gain de temps obtenu :(
+ * </p>
+ */
 public class ChessQueensV2 {
     /**
      * Container du probleme.
