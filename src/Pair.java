@@ -20,6 +20,11 @@ implements Comparable<Pair<A, B>>, Cloneable {
 	this.second = second;
     }
 
+    public Pair(Pair<A,B> other) {
+	this.first = other.first;
+	this.second = other.second;
+    }
+
     public int hashCode() {
 	int hashFirst = first != null ? first.hashCode() : 0;
 	int hashSecond = second != null ? second.hashCode() : 0;
