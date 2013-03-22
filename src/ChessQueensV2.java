@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -64,7 +67,7 @@ public class ChessQueensV2 {
      * </p>
      */
     private int tabuListSize = 0;
-
+    
     /**
      * Construit un nouveau probleme des n reines.
      * 
@@ -72,13 +75,14 @@ public class ChessQueensV2 {
      *            Le nombre de reines
      * @param t
      *            La taille de la liste tabu
+     * @throws IOException 
      */
     public ChessQueensV2(int n, int t) {
 	this.store = new Store();
 	this.Q = new IntVar[n];
 	this.tabuList = new ArrayList<Pair<Integer, Integer>>();
 	this.tabuListSize = t;
-
+	
 	IntVar[] y = new IntVar[n];
 	IntVar[] z = new IntVar[n];
 
@@ -121,9 +125,25 @@ public class ChessQueensV2 {
      */
     private int[] generateSolution(IntDomain[] domains) {
 	int[] solution = new int[domains.length];
-
+	int[] values = new int[domains.length];
+	
 	for (int i = 0; i < domains.length; ++i) {
-	    solution[i] = i;
+	    values[i] = i;
+	}
+	
+	Random rand = new Random();
+	
+	for (int k = 0; k < 4*domains.length ; ++k) {
+	    int i = rand.nextInt(domains.length);
+	    int j = rand.nextInt(domains.length);
+	    int aux = values[i];
+	    
+	    values[i] = values[j];
+	    values[j] = aux;
+	}
+	
+	for (int i = 0; i < domains.length; ++i) {
+	    solution[i] = values[i];
 	}
 
 	return solution;
@@ -269,27 +289,28 @@ public class ChessQueensV2 {
      *         <li>true si une solution est trouvee,</li>
      *         <li>false sinon</li>
      *         </ul>
+     * @throws IOException 
      */
-    public boolean tabuSearch(Integer nRuns) {
+    public boolean tabuSearch(Integer nRuns) throws IOException {
 	int[] bestSoFarSol = new int[this.Q.length];
 	int bestSoFarCost = Integer.MAX_VALUE;
 	Boolean stop = false;
-
+	
 	IntDomain[] domains = getDomains();
 
-	long startTime = System.currentTimeMillis();
-
 	for (int run = 0; run < nRuns && stop == false; run++) {
+	    long startTime = System.currentTimeMillis();
+	    
 	    System.out.println("Run " + (run + 1));
 	    tabuList.clear();
 
 	    // Generation de la solution initiale du run
 	    int[] currentSol = generateSolution(domains);
 	    int currentCost = fitness(currentSol);
-
-	    // System.out.print("Solution initiale aleatoire : ");
-	    // printSolution(currentSol);
-	    System.out.println("Cout initial : " + currentCost);
+	    
+//	    System.out.print("Solution initiale aleatoire : ");
+//	    printSolution(currentSol);
+	    System.out.println("\nCout initial : " + currentCost);
 
 	    Boolean goOn = true;
 
@@ -348,24 +369,26 @@ public class ChessQueensV2 {
 		    }
 		}
 	    }
-
+	    
+	    long endTime = System.currentTimeMillis();
+	    
+	    System.out.println("Temps d'execution : " + (endTime - startTime)
+		        + "ms");
+	    
 	    if (currentCost == 0) {
 		System.out.print("Solution admissible trouvee : ");
 		printSolution(currentSol);
 		System.out.println("\n");
 
 		stop = true;
-	    } else {
+	    }
+	    
+	    else {
 		System.out.println("Pas de solution admissible trouvee.");
 		System.out.println();
 	    }
 	}
-
-	long endTime = System.currentTimeMillis();
-
-	System.out.println("Temps d'execution : " + (endTime - startTime)
-	        + "ms");
-
+	
 	return (bestSoFarCost == 0);
     }
 
@@ -558,9 +581,16 @@ public class ChessQueensV2 {
 	}
 
 	if ((argList != null) && (argList.isEmpty() == false)) {
-	    ChessQueensV2 model = new ChessQueensV2(argList.get(0), argList.get(1));
-	    model.tabuSearch(argList.get(2));
-	    // boolean res2 = model.completeSearch();
+	    
+	    try {
+		ChessQueensV2 model = new ChessQueensV2(argList.get(0), argList.get(1));
+		model.tabuSearch(argList.get(2));
+		// boolean res2 = model.completeSearch();
+	    }
+	    
+	    catch(IOException e) {
+		System.err.println(e.getMessage());
+	    }
 	}
     }
 
