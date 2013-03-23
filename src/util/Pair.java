@@ -1,3 +1,4 @@
+package util;
 /**
  * Une paire d'elements.
  * 

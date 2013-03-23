@@ -1,4 +1,7 @@
+package meuh;
+
 import org.kohsuke.args4j.Option;
+
 
 /**
  * Arguments de la ligne de commande.

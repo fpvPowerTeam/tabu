@@ -1,6 +1,4 @@
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+package meuh;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -11,24 +9,26 @@ import JaCoP.constraints.XplusCeqZ;
 import JaCoP.core.IntDomain;
 import JaCoP.core.IntVar;
 import JaCoP.core.Store;
+import JaCoP.core.ValueEnumeration;
 import JaCoP.search.DepthFirstSearch;
 import JaCoP.search.IndomainMedian;
 import JaCoP.search.SelectChoicePoint;
 import JaCoP.search.SimpleSelect;
 import JaCoP.search.SmallestDomain;
 
+import util.Pair;
+
+
 /**
- * Seconde version de recherche tabu pour le probleme des n reines.
+ * Recherche tabu pour le probleme des n reines.
  * 
  * <p>
- * La solution initiale est formée en placant les reines sur une diagonale.
- * Le mouvement de voisinage est le swap entre deux lignes.
- * La taille du voisinage est ainsi reduite de n^2 a n*(n-1)/2 mais le nombre
- * de mouvements pour atteindre une solution admissible est accru.
- * Pas de gain de temps obtenu :(
+ * La solution initiale est generee aleatoirement.
+ * Le mouvement de voisinage est le deplacement d'une reine dans sa ligne.
  * </p>
+ *
  */
-public class ChessQueensV2 {
+public class ChessQueens {
     /**
      * Container du probleme.
      * 
@@ -67,7 +67,7 @@ public class ChessQueensV2 {
      * </p>
      */
     private int tabuListSize = 0;
-    
+
     /**
      * Construit un nouveau probleme des n reines.
      * 
@@ -75,14 +75,13 @@ public class ChessQueensV2 {
      *            Le nombre de reines
      * @param t
      *            La taille de la liste tabu
-     * @throws IOException 
      */
-    public ChessQueensV2(int n, int t) {
+    public ChessQueens(int n, int t) {
 	this.store = new Store();
 	this.Q = new IntVar[n];
 	this.tabuList = new ArrayList<Pair<Integer, Integer>>();
 	this.tabuListSize = t;
-	
+
 	IntVar[] y = new IntVar[n];
 	IntVar[] z = new IntVar[n];
 
@@ -124,26 +123,16 @@ public class ChessQueensV2 {
      *         generee
      */
     private int[] generateSolution(IntDomain[] domains) {
-	int[] solution = new int[domains.length];
-	int[] values = new int[domains.length];
-	
-	for (int i = 0; i < domains.length; ++i) {
-	    values[i] = i;
-	}
-	
 	Random rand = new Random();
-	
-	for (int k = 0; k < 4*domains.length ; ++k) {
-	    int i = rand.nextInt(domains.length);
-	    int j = rand.nextInt(domains.length);
-	    int aux = values[i];
-	    
-	    values[i] = values[j];
-	    values[j] = aux;
-	}
-	
+	int[] solution = new int[domains.length];
+
 	for (int i = 0; i < domains.length; ++i) {
-	    solution[i] = values[i];
+	    ValueEnumeration values = domains[i].valueEnumeration();
+	    int r = rand.nextInt(domains[i].getSize()); // 0 .. getSize()-1
+
+	    for (int j = 0; j <= r; ++j) {
+		solution[i] = values.nextElement(); // only the r-th is relevant
+	    }
 	}
 
 	return solution;
@@ -224,7 +213,7 @@ public class ChessQueensV2 {
      *            La solution courante
      * 
      * @return Une paire contenant le mouvement pour atteindre le meilleur
-     *         voisin de la solution (ligne,ligne) et son cout
+     *         voisin de la solution (ligne,colonne) et son cout
      */
     private Pair<Pair<Integer, Integer>, Integer> findBestNeighbour(int[] sol) {
 	int bestCost = Integer.MAX_VALUE;
@@ -239,22 +228,19 @@ public class ChessQueensV2 {
 	for (int i = 0; i < sol.length; i++) {
 	    currentNeighbour[i] = sol[i];
 	}
-	
+
 	// Parcours du voisinnage :
 	// pour chaque variable, on teste l'ensemble des valeurs possibles
-	for (int row1 = 0; row1 < sol.length-1 ; row1++) {
-	    for (int row2 = row1 + 1 ; row2 < sol.length; row2++) {
-		currentMove = new Pair<Integer, Integer>(row1, row2);
-
+	for (int row = 0; row < sol.length; row++) {
+	    for (int column = 0; column < sol.length; column++) {
+		currentMove = new Pair<Integer, Integer>(row, column);
+		
 		// La position de la variable modifiee ne doit
 		// pas appartenir a la liste tabu
-		if (this.isTabu(row1, row2)) {
-		    Integer aux = currentNeighbour[row1];
-		    currentNeighbour[row1] = currentNeighbour[row2];
-		    currentNeighbour[row2] = aux;
-		    
+		if (this.isTabu(row, column)) {
+		    currentNeighbour[row] = column;
 		    currentCost = fitness(currentNeighbour);
-		    
+
 		    if (currentCost < bestCost) {
 			bestMoves.clear();
 			bestMoves.add(new Pair<Integer, Integer>(currentMove));
@@ -265,9 +251,8 @@ public class ChessQueensV2 {
 		    else if(currentCost == bestCost) {
 			bestMoves.add(new Pair<Integer, Integer>(currentMove));
 		    }
-		    
-		    currentNeighbour[row2] = currentNeighbour[row1];
-		    currentNeighbour[row1] = aux;
+			
+		    currentNeighbour[row] = sol[row];
 		}
 	    }
 	}
@@ -289,28 +274,27 @@ public class ChessQueensV2 {
      *         <li>true si une solution est trouvee,</li>
      *         <li>false sinon</li>
      *         </ul>
-     * @throws IOException 
      */
-    public boolean tabuSearch(Integer nRuns) throws IOException {
+    public boolean tabuSearch(Integer nRuns) {
 	int[] bestSoFarSol = new int[this.Q.length];
 	int bestSoFarCost = Integer.MAX_VALUE;
 	Boolean stop = false;
-	
+
 	IntDomain[] domains = getDomains();
 
+	long startTime = System.currentTimeMillis();
+
 	for (int run = 0; run < nRuns && stop == false; run++) {
-	    long startTime = System.currentTimeMillis();
-	    
 	    System.out.println("Run " + (run + 1));
 	    tabuList.clear();
 
 	    // Generation de la solution initiale du run
 	    int[] currentSol = generateSolution(domains);
 	    int currentCost = fitness(currentSol);
-	    
-//	    System.out.print("Solution initiale aleatoire : ");
-//	    printSolution(currentSol);
-	    System.out.println("\nCout initial : " + currentCost);
+
+	    // System.out.print("Solution initiale aleatoire : ");
+	    // printSolution(currentSol);
+	    System.out.println("Cout initial : " + currentCost);
 
 	    Boolean goOn = true;
 
@@ -328,13 +312,10 @@ public class ChessQueensV2 {
 
 		    // Le voisin est meilleur que la solution courante
 		    if (bestNeighbourCost <= currentCost) {
-			int row1 = p.getFirst().getFirst();
-			int row2 = p.getFirst().getSecond();
+			int row = p.getFirst().getFirst();
+			int column = p.getFirst().getSecond();
 			
-			Integer aux = currentSol[row1];
-			currentSol[row1] = currentSol[row2];
-			currentSol[row2] = aux;
-			
+			currentSol[row] = column;
 			currentCost = bestNeighbourCost;
 
 			if ((this.tabuList.size() == tabuListSize)
@@ -369,26 +350,24 @@ public class ChessQueensV2 {
 		    }
 		}
 	    }
-	    
-	    long endTime = System.currentTimeMillis();
-	    
-	    System.out.println("Temps d'execution : " + (endTime - startTime)
-		        + "ms");
-	    
+
 	    if (currentCost == 0) {
 		System.out.print("Solution admissible trouvee : ");
 		printSolution(currentSol);
 		System.out.println("\n");
 
 		stop = true;
-	    }
-	    
-	    else {
+	    } else {
 		System.out.println("Pas de solution admissible trouvee.");
 		System.out.println();
 	    }
 	}
-	
+
+	long endTime = System.currentTimeMillis();
+
+	System.out.println("Temps d'execution : " + (endTime - startTime)
+	        + "ms");
+
 	return (bestSoFarCost == 0);
     }
 
@@ -581,16 +560,9 @@ public class ChessQueensV2 {
 	}
 
 	if ((argList != null) && (argList.isEmpty() == false)) {
-	    
-	    try {
-		ChessQueensV2 model = new ChessQueensV2(argList.get(0), argList.get(1));
-		model.tabuSearch(argList.get(2));
-		// boolean res2 = model.completeSearch();
-	    }
-	    
-	    catch(IOException e) {
-		System.err.println(e.getMessage());
-	    }
+	    ChessQueens model = new ChessQueens(argList.get(0), argList.get(1));
+	    model.tabuSearch(argList.get(2));
+	    // boolean res2 = model.completeSearch();
 	}
     }
 
