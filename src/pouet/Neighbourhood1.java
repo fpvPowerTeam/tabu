@@ -10,7 +10,7 @@ import util.Pair;
 public class Neighbourhood1 implements Neighbourhood {
 
     @Override
-    public Pair<Integer, Integer> findBestNeighbour(Solution sol,
+    public Neighbour findBestNeighbour(Solution sol,
             List<Pair<Integer, Integer>> tabuList) {
 	
 	int bestCost = sol.cost();
@@ -42,8 +42,9 @@ public class Neighbourhood1 implements Neighbourhood {
 	
 	Random rand = new Random();
 	Integer randIndex = rand.nextInt(bestMoves.size());
+	Pair<Integer, Integer> move = bestMoves.get(randIndex);
 	
-	return bestMoves.get(randIndex);
+	return new Neighbour(new Solution(sol, move), move);
     }
 
 }

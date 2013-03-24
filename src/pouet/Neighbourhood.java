@@ -19,6 +19,6 @@ public interface Neighbourhood {
      * @return The best solution neighbour in accordance with the tabu
      *         list
      */
-    public Pair<Integer,Integer> findBestNeighbour(
+    public Neighbour findBestNeighbour(
 	    Solution sol, List<Pair<Integer, Integer>> tabuList);
 }

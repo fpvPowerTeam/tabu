@@ -1,6 +1,5 @@
 package pouet;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -164,8 +163,8 @@ public class Main {
 	}
 
 	if ((argList != null) && (argList.isEmpty() == false)) {
-	    SolutionGenerator generator = new Generator1();
-	    Neighbourhood neighbourhood = new Neighbourhood1();
+	    SolutionGenerator generator = new Generator2();
+	    Neighbourhood neighbourhood = new Neighbourhood2();
 	    
 	    ChessQueensTS tabuSearch = new ChessQueensTS(
 		    argList.get(0), argList.get(1));
