@@ -5,7 +5,6 @@ import java.util.List;
 
 import util.Pair;
 
-
 public class ChessQueensTS {
 
     /**
@@ -24,9 +23,18 @@ public class ChessQueensTS {
     private List<Pair<Integer, Integer>> tabuList_ =
 	    new ArrayList<Pair<Integer, Integer>>();
 
+    private Boolean verbose_ = true;
+
     public ChessQueensTS(final Integer nQueens, final Integer memorySize) {
 	this.nQueens_ = nQueens;
 	this.memorySize_ = memorySize;
+    }
+
+    public ChessQueensTS(final Integer nQueens, final Integer memorySize,
+	    final Boolean verbose) {
+	this.nQueens_ = nQueens;
+	this.memorySize_ = memorySize;
+	this.verbose_ = verbose;
     }
 
     public Solution search(final Neighbourhood neighbourhood,
@@ -34,58 +42,96 @@ public class ChessQueensTS {
 
 	Solution candidateSol = null;
 	Solution bestSol = null;
+	Solution currentSol = null;
 	Solution neighbourSol = null;
 
 	Boolean stop = false;
 
+	// Number of consecutive movements without any improvement
+	Integer noImprovement = 0;
+	
+	long startTime = System.currentTimeMillis();
+	
 	for (int run = 0; run < nRuns && stop == false; run++) {
-	    long startTime = System.currentTimeMillis();
+	    
 	    this.tabuList_.clear();
+	    noImprovement = 0;
 
-	    bestSol = generator.generate(this.nQueens_);
+	    currentSol = generator.generate(this.nQueens_);
+	    bestSol = (Solution) currentSol.clone();
+
 	    Boolean goOn = true;
 
-	    System.out.print("Initial solution : ");
-	    bestSol.print();
+	    if (this.verbose_ == true) {
+		System.out.print("\nInitial solution : ");
+		currentSol.print();
+		
+		System.out.println("Initial cost : "
+			+ currentSol.cost() + "\n");
+	    }
 
-	    while(goOn && bestSol.cost() > 0) {
+	    while (goOn && bestSol.cost() > 0) {
 		goOn = false;
 
-		Pair<Integer,Integer> mvt = neighbourhood.findBestNeighbour(
-			bestSol, this.tabuList_);
+		Neighbour neighbour = neighbourhood.findBestNeighbour(
+		        currentSol, this.tabuList_);
 
-		neighbourSol = new Solution(bestSol, mvt);
+		neighbourSol = neighbour.getSolution();
 
-		if(neighbourSol.cost() <= bestSol.cost()) {
-		    if(neighbourSol.cost() < bestSol.cost()) {
-			System.out.println("New lower cost : "
-				+ neighbourSol.cost());
+		if (neighbourSol.cost() <= bestSol.cost()) {
+
+		    if (neighbourSol.cost() < bestSol.cost()) {
+			noImprovement = 0;
+
+			if (this.verbose_ == true) {
+			    System.out.println("New lower cost : "
+				    + neighbourSol.cost());
+			}
 		    }
-		    
-		    bestSol = neighbourSol.clone();
-		    
+
+		    else {
+			++noImprovement;
+
+			System.out.println("DBG " + noImprovement
+			        + " not improving mvt(s)");
+		    }
+
+		    currentSol = neighbourSol;
+		    bestSol = (Solution) currentSol.clone();
+
 		    if ((this.tabuList_.size() == this.memorySize_)
 			    && (memorySize_ > 0)) {
 
 			this.tabuList_.remove(0);
 		    }
 
-		    if(this.memorySize_ > 0) {
-			this.tabuList_.add(mvt);
+		    if (this.memorySize_ > 0) {
+			this.tabuList_.add(neighbour.getMovement());
 		    }
 
 		    goOn = true;
+		}
+
+		if (noImprovement > this.memorySize_) {
+		    currentSol.degrade();
+
+		    if (this.verbose_ == true) {
+			System.out.println("Local minimum detected."
+			        + "Solution degraded.");
+		    }
 		}
 	    }
 	}
 
 	long endTime = System.currentTimeMillis();
-	
-	if(bestSol.cost() == 0) {
-	    System.out.print("Candidate solution found : ");
+
+	if ((bestSol.cost() == 0) && (this.verbose_ == true)) {
+	    System.out.println("DBG " + (endTime - startTime) + " ms");
+	    
+	    System.out.print("\nCandidate solution found : ");
 	    bestSol.print();
 	}
-	
+
 	return candidateSol;
     }
 }

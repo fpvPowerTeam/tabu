@@ -8,15 +8,12 @@ import util.Pair;
  */
 public class Neighbour {
 
+    private Solution neighbourSol_ = null;
+    
     /**
      * The movement to perform to reach the neighbour.
      */
     private Pair<Integer, Integer> movement_ = null;
-
-    /**
-     * The cost of the neighbour.
-     */
-    private Integer cost_ = null;
 
     /**
      * Constructs a new neighbour.
@@ -26,16 +23,16 @@ public class Neighbour {
      * @param cost
      *            The cost of the neighbour
      */
-    public Neighbour(final Pair<Integer, Integer> movement, final Integer cost) {
+    public Neighbour(final Solution sol, final Pair<Integer, Integer> movement) {
+	this.neighbourSol_ = sol;
 	this.movement_ = movement;
-	this.cost_ = cost;
+    }
+    
+    public Solution getSolution() {
+	return this.neighbourSol_;
     }
     
     public Pair<Integer, Integer> getMovement() {
 	return this.movement_;
-    }
-    
-    public Integer getCost() {
-	return this.cost_;
     }
 }
