@@ -382,7 +382,7 @@ public class ChessQueens {
     public boolean completeSearch() {
 	DepthFirstSearch<IntVar> search = new DepthFirstSearch<IntVar>();
 
-	search.getSolutionListener().searchAll(true);
+	search.getSolutionListener().searchAll(false);
 	search.getSolutionListener().recordSolutions(true);
 
 	SelectChoicePoint<IntVar> select = new SimpleSelect<IntVar>(this.Q,
@@ -561,8 +561,13 @@ public class ChessQueens {
 
 	if ((argList != null) && (argList.isEmpty() == false)) {
 	    ChessQueens model = new ChessQueens(argList.get(0), argList.get(1));
-	    model.tabuSearch(argList.get(2));
-	    // boolean res2 = model.completeSearch();
+//	    model.tabuSearch(argList.get(2));
+	    
+	    long startTime = System.currentTimeMillis();
+	    boolean res2 = model.completeSearch();
+	    long endTime = System.currentTimeMillis();
+	    
+	    System.out.println("Complete search executed in " + (endTime - startTime) + " ms.");
 	}
     }
 
