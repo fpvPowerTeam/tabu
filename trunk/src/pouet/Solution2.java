@@ -1,5 +1,6 @@
 package pouet;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -9,12 +10,12 @@ import util.Pair;
 /**
  * A solution (not necessarily feasible) to a n-queens problem.
  */
-public class Solution implements Cloneable {
+public class Solution2 implements Cloneable {
     
     /**
      * The list of the values of the variables.
      */
-    private int variables_[] = null;
+    private List<Integer> variables_ = new ArrayList<Integer>();
     
     /**
      * The solution cost.
@@ -27,13 +28,7 @@ public class Solution implements Cloneable {
      * @param size
      *            The size of the solution
      */
-    public Solution(int size) {
-	this.variables_ = new int[size];
-	
-	for(int i = 0 ; i < size ; ++i) {
-	    this.variables_[i] = 0;
-	}
-    }
+    public Solution2() {}
     
     /**
      * Constructs a new solution.
@@ -41,12 +36,8 @@ public class Solution implements Cloneable {
      * @param values
      *            List of the variables values
      */
-    public Solution(List<Integer> values) {
-	this.variables_ = new int[values.size()];
-	
-	for(int i = 0 ; i < values.size() ; ++i) {
-	    variables_[i] = values.get(i);
-	}
+    public Solution2(List<Integer> values) {
+	this.variables_.addAll(values);
     }
     
     /**
@@ -55,36 +46,39 @@ public class Solution implements Cloneable {
      * @param values
      *            Array of the variables values
      */
-    public Solution(int[] values) {
-	this.variables_ = new int[values.length];
-	
+    public Solution2(int[] values) {
 	for(int i = 0 ; i < values.length ; ++i) {
-	    variables_[i] = values[i];
+	    variables_.add(values[i]);
 	}
     }
     
-    public Solution(final Solution sol, final Pair<Integer, Integer> movement) {
-	this.variables_ = new int[sol.size()];
-	
-	System.arraycopy(sol.variables_, 0, this.variables_, 0, sol.size());
-	this.variables_[movement.getFirst()] = movement.getSecond();
+    public Solution2(final Solution2 sol, final Pair<Integer, Integer> movement) {
+	this.variables_.addAll(sol.variables_);
+	this.variables_.set(movement.getFirst(),movement.getSecond());
     }
     
     public int get(final int index) {
-	return this.variables_[index];
+	return this.variables_.get(index);
     }
     
     public int size() {
-	return this.variables_.length;
+	return this.variables_.size();
     }
     
     public int cost() {
 	return (this.cost_ != null) ? this.cost_ : this.fitness();
     }
     
+    public void add(int value) {
+	this.variables_.add(value);
+    }
+    
+    public void remove(int index) {
+	this.variables_.remove(index);
+    }
+    
     public void set(final int index, final int value) {
-	this.variables_[index] = value;
-	
+	this.variables_.set(index, value);
 	this.cost_ = null;
     }
     
@@ -94,19 +88,15 @@ public class Solution implements Cloneable {
 	int index1 = rand.nextInt(this.size());
 	int index2 = rand.nextInt(this.size());
 	
-	int aux = this.variables_[index2];
-	this.variables_[index2] = this.variables_[index1];
-	this.variables_[index1] = aux;
+	this.swap(index1, index2);
 	
 	this.cost_ = null;
     }
     
     public void swap(int index1, int index2) {
-	int aux = 0;
-	
-	aux = this.variables_[index1];
-	this.variables_[index1] = this.variables_[index2];
-	this.variables_[index2] = aux;
+	int aux = this.variables_.get(index1);
+	this.variables_.set(index1, this.variables_.get(index2));
+	this.variables_.set(index2, aux);
     }
     
     private int fitness() {
@@ -120,23 +110,23 @@ public class Solution implements Cloneable {
 	int[] aux = new int[this.size()];
 	
 	for (int i = 0 ; i < this.size() ; ++i) {
-	    aux[i] = this.variables_[i] + i;
+	    aux[i] = this.variables_.get(i) + i;
 	}
 	
-	result += this.fitnessAllDiff(new Solution(aux));
+	result += this.fitnessAllDiff(new Solution2(aux));
 
 	// allDifferent on z
 	
 	for (int i = 0 ; i < this.size() ; ++i) {
-	    aux[i] = this.variables_[i] - i;
+	    aux[i] = this.variables_.get(i) - i;
 	}
 	
-	result += this.fitnessAllDiff(new Solution(aux));
+	result += this.fitnessAllDiff(new Solution2(aux));
 
 	return result;
     }
     
-    private int fitnessAllDiff(Solution sol) {
+    private int fitnessAllDiff(Solution2 sol) {
 	int result = 0;
 	
 	for (int i = 0 ; i < sol.size() ; ++i) {

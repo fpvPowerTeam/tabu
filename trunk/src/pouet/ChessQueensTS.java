@@ -1,44 +1,29 @@
 package pouet;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 
-import util.Pair;
 
 public class ChessQueensTS {
 
     /**
      * The number of queens.
      */
-    private Integer nQueens_;
+    private int nQueens_;
 
     /**
      * The size of the tabu list (memory).
      */
-    private Integer memorySize_;
+    private int memorySize_;
 
-    /**
-     * The tabu list.
-     */
-    private List<Pair<Integer, Integer>> tabuList_ =
-	    new ArrayList<Pair<Integer, Integer>>();
-
-    private Boolean verbose_ = true;
-
-    public ChessQueensTS(final Integer nQueens, final Integer memorySize) {
+    public ChessQueensTS(final int nQueens, final int memorySize) {
 	this.nQueens_ = nQueens;
 	this.memorySize_ = memorySize;
-    }
-
-    public ChessQueensTS(final Integer nQueens, final Integer memorySize,
-	    final Boolean verbose) {
-	this.nQueens_ = nQueens;
-	this.memorySize_ = memorySize;
-	this.verbose_ = verbose;
     }
 
     public Solution search(final Neighbourhood neighbourhood,
-	    final SolutionGenerator generator, final Integer nRuns) {
+	    final SolutionGenerator generator, final Integer nRuns,
+	    final Data data, final boolean verbose)
+	    throws IOException {
 
 	Solution candidateSol = null;
 	Solution bestSol = null;
@@ -46,90 +31,114 @@ public class ChessQueensTS {
 	Solution neighbourSol = null;
 
 	Boolean stop = false;
+	long cntIterations = 0;
+	long cntRuns = 0;
+	long startTime = 0;
+	long endTime = 0;
 
 	// Number of consecutive movements without any improvement
 	Integer noImprovement = 0;
-	
-	long startTime = System.currentTimeMillis();
-	
-	for (int run = 0; run < nRuns && stop == false; run++) {
-	    
-	    this.tabuList_.clear();
-	    noImprovement = 0;
 
-	    currentSol = generator.generate(this.nQueens_);
+	if(verbose == true) {
+	    System.out.println("\nNumber of queens : " + this.nQueens_);
+	    System.out.println("Tabu list size : " + this.memorySize_);
+	    System.out.println("Maximum number of runs : " + nRuns);
+	}
+
+	startTime = System.currentTimeMillis();
+
+	for (cntRuns = 0; cntRuns < nRuns && stop == false; cntRuns++) {
+	    if(verbose == true) {
+		System.out.println("\nRun " + (cntRuns+1) + " :\n");
+	    }
+
+	    neighbourhood.clearTabuList();
+	    noImprovement = 0;
+	    cntIterations = 0;
+
+	    currentSol = generator.generate(this.nQueens_, verbose);
 	    bestSol = (Solution) currentSol.clone();
 
 	    Boolean goOn = true;
 
-	    if (this.verbose_ == true) {
-		System.out.print("\nInitial solution : ");
-		currentSol.print();
-		
-		System.out.println("Initial cost : "
-			+ currentSol.cost() + "\n");
+	    if (verbose == true) {
+		System.out.println("\nInitial cost : " + currentSol.cost());
 	    }
 
 	    while (goOn && bestSol.cost() > 0) {
 		goOn = false;
+		++cntIterations;
 
-		Neighbour neighbour = neighbourhood.findBestNeighbour(
-		        currentSol, this.tabuList_);
+		boolean pouet = neighbourhood.findBestNeighbour(currentSol);
 
-		neighbourSol = neighbour.getSolution();
+		if(pouet == true) {
+		    neighbourSol = neighbourhood.getNeighbour();
 
-		if (neighbourSol.cost() <= bestSol.cost()) {
+		    if (neighbourSol.cost() <= bestSol.cost()) {
 
-		    if (neighbourSol.cost() < bestSol.cost()) {
-			noImprovement = 0;
+			if (neighbourSol.cost() < bestSol.cost()) {
+			    noImprovement = 0;
 
-			if (this.verbose_ == true) {
-			    System.out.println("New lower cost : "
-				    + neighbourSol.cost());
+			    if (verbose == true) {
+				System.out.println("New lower cost : "
+					+ neighbourSol.cost());
+			    }
 			}
+
+			else {
+			    ++noImprovement;
+			}
+
+			currentSol = neighbourSol;
+			bestSol = (Solution) currentSol.clone();
+
+			try {
+			    neighbourhood.addToTabuList();
+			}
+
+			catch(Exception e) {
+			    e.printStackTrace(System.err);
+			}
+
+			goOn = true;
 		    }
-
-		    else {
-			++noImprovement;
-
-			System.out.println("DBG " + noImprovement
-			        + " not improving mvt(s)");
-		    }
-
-		    currentSol = neighbourSol;
-		    bestSol = (Solution) currentSol.clone();
-
-		    if ((this.tabuList_.size() == this.memorySize_)
-			    && (memorySize_ > 0)) {
-
-			this.tabuList_.remove(0);
-		    }
-
-		    if (this.memorySize_ > 0) {
-			this.tabuList_.add(neighbour.getMovement());
-		    }
-
-		    goOn = true;
 		}
 
 		if (noImprovement > this.memorySize_) {
 		    currentSol.degrade();
+		    noImprovement = 0;
 
-		    if (this.verbose_ == true) {
+		    if (verbose == true) {
 			System.out.println("Local minimum detected."
-			        + "Solution degraded.");
+				+ "Solution degraded.");
 		    }
 		}
 	    }
-	}
-
-	long endTime = System.currentTimeMillis();
-
-	if ((bestSol.cost() == 0) && (this.verbose_ == true)) {
-	    System.out.println("DBG " + (endTime - startTime) + " ms");
 	    
-	    System.out.print("\nCandidate solution found : ");
-	    bestSol.print();
+	    if(bestSol.cost() == 0) {
+		stop = true;
+	    }
+	    else {
+		if(verbose == true) {
+		    System.out.println("No solution found.");
+		}
+	    }
+	}
+	
+	endTime = System.currentTimeMillis();
+
+	if (bestSol.cost() == 0) {
+	    
+	    if(verbose == true) {
+		System.out.println("\nCandidate solution found in " + cntRuns
+			+ " run(s) after " + (endTime - startTime) + " ms :");
+
+		    bestSol.print();
+	    }
+
+	    if (data != null) {
+		data.add((endTime - startTime), cntRuns, cntIterations);
+	    }
 	}
 
 	return candidateSol;

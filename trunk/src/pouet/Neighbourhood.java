@@ -1,24 +1,24 @@
 package pouet;
 
-import java.util.List;
 
-import util.Pair;
-
-
-public interface Neighbourhood {
+public abstract class Neighbourhood {
     
     /**
-     * Returns the best neighbour of a n-queens problem solution.
+     * Searches an improving neighbour solution.
      * 
      * @param sol
-     * 		A n-queens problem solution
+     *            A n-queens problem solution
      * 
-     * @param tabuList
-     *            A list of forbidden movements
-     * 
-     * @return The best solution neighbour in accordance with the tabu
-     *         list
+     * @return Whether it finds a neighbour with a cost greater or equal to the
+     *         solution one
      */
-    public Neighbour findBestNeighbour(
-	    Solution sol, List<Pair<Integer, Integer>> tabuList);
+    public abstract boolean findBestNeighbour(Solution sol);
+    
+    public abstract void addToTabuList() throws Exception;
+    
+    public abstract Solution getNeighbour();
+    
+    public abstract void clearTabuList();
+    
+    public abstract String TabuListToString();
 }

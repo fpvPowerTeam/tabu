@@ -6,10 +6,22 @@ import java.util.Random;
 
 
 public class Generator2 implements SolutionGenerator {
+    
+    private Preprocessor preprocessor_ = null;
+    
+    public Generator2() {}
+    
+    public Generator2(Preprocessor preproc) {
+	this.preprocessor_ = preproc;
+    }
 
     @Override
-    public Solution generate(Integer size) {
+    public Solution generate(Integer size, boolean verbose) {
 	List<Integer> values = new ArrayList<Integer>();
+	
+	if(verbose == true) {
+	    System.out.print("Generation of an initial solution ... ");
+	}
 	
 	for(Integer i = 0 ; i < size ; ++i) {
 	    values.add(i);
@@ -27,7 +39,12 @@ public class Generator2 implements SolutionGenerator {
 	    values.set(index2, aux);
 	}
 	
-	return new Solution(values);
+	if(verbose == true) {
+	    System.out.println("done");
+	}
+	
+	return (this.preprocessor_ != null) ?
+		this.preprocessor_.preprocess(new Solution(values), verbose)
+		: new Solution(values);
     }
-
 }

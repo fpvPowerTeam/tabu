@@ -11,5 +11,5 @@ public interface SolutionGenerator {
      * 
      * @return A solution
      */
-    public Solution generate(Integer size);
+    public Solution generate(Integer size, boolean verbose);
 }
